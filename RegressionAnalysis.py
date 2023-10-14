@@ -65,9 +65,9 @@ numeric_columns_boston = ['CRIM', 'ZN', 'INDUS', 'NOX', 'RM', 'AGE', 'DIS', 'RAD
 def dist_custom(dataset, columns_list, rows, cols, suptitle):
     fig, axs = plt.subplots(rows, cols, figsize=(14,14))
     fig.suptitle(suptitle, y=1, size = 25)
-    print("axs: {}".format(axs))
+    
     axs = axs.flatten()
-    print("axs: {}".format(axs))
+    
     for i, data in enumerate(columns_list):
         sns.kdeplot(dataset[data], ax=axs[i], fill=True, alpha=.5, linewidth=0)
         axs[i].set_title(data + ', skewness is ' + str(round(dataset[data].skew(axis = 0, skipna=True), 2)))
@@ -127,6 +127,109 @@ ohe = OneHotEncoder(drop="first", handle_unknown="ignore")
 ohe = pd.get_dummies(data=df1, columns=["region"])
 
 df1 = ohe.drop(["Date", "4046", "4225", "4770", "Small Bags", "Large Bags", "XLarge Bags"], axis = 1)
+
+
+# Outlier detection and removal
+###############################
+
+#Use Tukey's method of IQR to detect and remove outliers
+
+def IQR_method(df, n, features):
+    """
+    Takes a dataframe and returns an index list corresponding to the observations 
+    containing more than n outliers according to the Tukey IQR method.
+    """
+
+    outlier_list = []
+
+    for column in features:
+
+        # 1st quartile (25%)
+        Q1 = np.percentile(df[column], 25)
+
+        # 3rd quartile (75%)
+        Q3 = np.percentile(df[column], 75)
+
+        IQR = Q3 - Q1
+
+        #outlier step
+        outlier_step = 1.5 * IQR
+
+        #determining a list of indices of outliers
+        outlier_list_column = df[(df[column] < Q1 - outlier_step) | (df[column] > Q3 + outlier_step)].index
+
+        outlier_list.extend(outlier_list_column)
+
+        #selecting observations with more than x outliers
+        outlier_list = Counter(outlier_list)
+        
+        multiple_outliers = list(k for k, v in outlier_list.items() if v > n)
+        
+
+        #calculate the number of records below and above lower and upper bound value respectively
+        df1 = df[df[column] < Q1 - outlier_step] 
+        df2 = df[df[column] > Q3 + outlier_step]
+        
+
+        print("Total number of deleted outliers: ", df1.shape[0] + df2.shape[0])
+
+        return multiple_outliers
+
+
+
+numeric_columns2 = ["Total Volume", "Total Bags"]
+Outliers_IQR = IQR_method(df1, 1, numeric_columns2)
+
+df1 = df1.drop(Outliers_IQR, axis=0, ).reset_index(drop = True)
+
+
+numeric_columns2 = ['CRIM', 'ZN', 'NOX', 'RM', 'AGE', 'DIS', 'PTRATIO', 'B', 'LSTAT']
+Outliers_IQR = IQR_method(raw_df2, 1, numeric_columns2)
+
+df2 = raw_df2.drop(Outliers_IQR, axis = 0).reset_index(drop = True)
+
+
+# Train and Test Split
+######################
+
+
+X = df1.drop("AveragePrice", axis=1)
+y = df1["AveragePrice"]
+
+X2 = raw_df2.iloc[:, :-1]
+y2 = raw_df2.iloc[:, -1]
+
+
+from sklearn.model_selection import train_test_split
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+X2_train, X2_test, y2_train, y2_test = train_test_split(X2, y2, test_size=0.3, random_state=42)
+
+
+# Feature Scaling
+##################
+
+
+from sklearn.preprocessing import StandardScaler
+
+def Standard_Scaler(df, col_names):
+    features = df[col_names]
+    scaler = StandardScaler().fit(features.values)
+    features = scaler.transform(features.values)
+    df[col_names] = features
+
+    return df
+
+
+col_names = ["Total Volume", "Total Bags"]
+X_train = Standard_Scaler(X_train, col_names)
+X_test = Standard_Scaler(X_test, col_names)
+
+col_names = ['CRIM', 'ZN', 'INDUS', 'NOX', 'RM', 'AGE', 'DIS', 'RAD', 'TAX', 'PTRATIO', 'B', 'LSTAT']
+X2_train = Standard_Scaler(X2_train, col_names)
+X2_test = Standard_Scaler(X2_test, col_names)
+
+
 
 
 
