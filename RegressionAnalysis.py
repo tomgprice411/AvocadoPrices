@@ -233,4 +233,206 @@ X2_test = Standard_Scaler(X2_test, col_names)
 
 
 
+####################################
+#### Comparing Different Models ####
+####################################
+
+
+
+### Linear Regression
+######################
+
+
+from sklearn.linear_model import LinearRegression
+
+#creating and training the model
+lm = LinearRegression()
+lm.fit(X_train, y_train)
+
+
+
+#### Linear Regression for Avocado dataset
+
+
+#make a model prediction on the test set
+y_pred = lm.predict(X_test)
+
+
+#Linear regression performance on the Avocado Prices dataset
+ndf = [Reg_Models_Evaluation_Metrics(lm, X_train, y_train, X_test, y_test, y_pred)]
+
+lm_score = pd.DataFrame(ndf, columns = ["R2 Score", "Adjusted R2 Score", "Cross Validated R2 Score", "RMSE"])
+
+lm_score.insert(0, "Model", "Linear Regression")
+
+lm_score
+
+
+plt.figure(figsize=(10,5))
+sns.regplot(x=y_test, y=y_pred)
+plt.title("Linear Regression for Avocado dataset", fontsize=20)
+plt.show()
+
+
+#### Linear Regression for Boston dataset
+
+
+lm.fit(X2_train, y2_train)
+y_pred = lm.predict(X2_test)
+
+ndf = [Reg_Models_Evaluation_Metrics(lm, X2_train, y2_train, X2_test, y2_test, y_pred)]
+
+lm_score2 = pd.DataFrame(ndf, columns = ["R2 Score", "Adjusted R2 Score", "Cross Validated R2 Score", "RMSE"])
+
+lm_score2.insert(0, "Model", "Linear Regression")
+lm_score2
+
+### Random Forest
+##################
+
+from sklearn.ensemble import RandomForestRegressor
+
+#create and train model
+RandomForest_reg = RandomForestRegressor(n_estimators = 10, random_state=0)
+
+
+#### Random Forest for Avocado dataset
+
+
+RandomForest_reg.fit(X_train, y_train)
+
+#Model making a prediction on test data
+y_pred = RandomForest_reg.predict(X_test)
+
+ndf = [Reg_Models_Evaluation_Metrics(RandomForest_reg, X_train, y_train, X_test, y_test, y_pred)]
+rf_score = pd.DataFrame(data = ndf, columns = ["R2 Score", "Adjusted R2 Score", "Cross Validated R2 Score", "RMSE"])
+
+rf_score.insert(0, "Model", "Random Forest")
+
+#### Random Forest for Boston dataset
+
+
+RandomForest_reg.fit(X2_train, y2_train)
+
+#make a prediction on test data
+y_pred = RandomForest_reg.predict(X2_test)
+
+ndf = [Reg_Models_Evaluation_Metrics(RandomForest_reg, X2_train, y2_train, X2_test, y2_test, y_pred)]
+
+rf_score2 = pd.DataFrame(ndf, columns = ["R2 Score", "Adjusted R2 Score", "Cross Validated R2 Score", "RMSE"])
+rf_score2.insert(0, "Model", "Random Forest")
+rf_score2
+
+
+### Ridge Regression
+######################
+
+from sklearn.linear_model import Ridge
+
+#create and train model
+ridge_reg = Ridge(alpha=3, solver="cholesky")
+
+
+### Ridge Regression on Avocado dataset
+
+ridge_reg.fit(X_train, y_train)
+
+#make model predictions
+
+y_pred = ridge_reg.predict(X_test)
+
+ndf = [Reg_Models_Evaluation_Metrics(ridge_reg, X_train, y_train, X_test, y_test, y_pred)]
+
+rr_score = pd.DataFrame(ndf, columns = ["R2 Score", "Adjusted R2 Score", "Cross Validated R2 Score", "RMSE"])
+
+rr_score.insert(0, "Model", "Ridge Regression")
+
+rr_score
+
+#### Ridge Regression for Boston dataset
+
+ridge_reg.fit(X2_train, y2_train)
+
+#make model predictions
+y_pred = ridge_reg.predict(X2_test)
+
+ndf = [Reg_Models_Evaluation_Metrics(ridge_reg, X2_train, y2_train, X2_test, y2_test, y_pred)]
+rr_score2 = pd.DataFrame(ndf, columns=['R2 Score','Adjusted R2 Score','Cross Validated R2 Score','RMSE'])
+
+rr_score2.insert(0, "Model", "Ridge Regression")
+rr_score2
+
+
+
+#### XG Boost
+##############
+
+
+# from xgboost import XGBRegressor
+
+# #create a xgboost regression model
+# XGBR = XGBRegressor(n_estimators=1000, max_depth=7, eta=0.1, subsample=0.8, colsample_bytree=0.8)
+
+
+# ### XGBoost performance for Avocado dataset
+
+# XGBR.fit(X_train, y_train)
+
+# #make model predictions
+# y_pred = XGBR.predict(X_test)
+
+
+# ndf = [Reg_Models_Evaluation_Metrics(XGBR, X_train, y_train, X_test, y_test, y_pred)]
+# XGBR_score = pd.DataFrame(ndf, columns = ['R2 Score','Adjusted R2 Score','Cross Validated R2 Score','RMSE'])
+# XGBR_score.insert(0, "Model", "XGBoost")
+# XGBR_score
+
+
+
+#### Recursive Feature Elimination
+##################################
+
+from sklearn.feature_selection import RFE
+from sklearn.pipeline import Pipeline
+
+#create pipeline
+rfe = RFE(estimator=RandomForestRegressor(), n_features_to_select=60)
+model = RandomForestRegressor()
+
+rf_pipeline = Pipeline(steps=[("s", rfe), ("m", model)])
+
+
+#### Random Forest RFE performance for Avocado dataset
+
+rf_pipeline.fit(X_train, y_train)
+
+#Model making a prediction
+y_pred = rf_pipeline.predict(X_test)
+
+ndf = [Reg_Models_Evaluation_Metrics(rf_pipeline, X_train, y_train, X_test, y_test, y_pred)]
+
+rfe_score = pd.DataFrame(ndf, columns = ['R2 Score','Adjusted R2 Score','Cross Validated R2 Score','RMSE'])
+rfe_score.insert(0, "Model", "Random Forest with RFE")
+rfe_score
+
+
+### Random Forest RFE performance for Boston dataset
+
+#create a pipeline
+rfe = RFE(estimator=RandomForestRegressor(), n_features_to_select=8)
+model = RandomForestRegressor()
+rf_pipeline = Pipeline(steps=[("s", rfe), ("m", model)])
+
+rf_pipeline.fit(X2_train, y2_train)
+
+#make a prediction on test data
+y_pred = rf_pipeline.predict(X2_test)
+
+ndf = [Reg_Models_Evaluation_Metrics(rf_pipeline, X2_train, y2_train, X2_test, y2_test, y_pred)]
+
+rfe_score2 = pd.DataFrame(ndf, columns = ['R2 Score','Adjusted R2 Score','Cross Validated R2 Score','RMSE'])
+rfe_score2.insert(0, "Model", "Random Forest RFE")
+rfe_score2
+
+
 
