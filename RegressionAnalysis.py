@@ -10,6 +10,9 @@ from sklearn.model_selection import cross_val_score
 from sklearn import metrics
 from collections import Counter
 
+
+#https://www.kaggle.com/code/marcinrutecki/regression-models-evaluation-metrics
+
 #defining function for regression metrics
 
 def Reg_Models_Evaluation_Metrics(model, X_train, y_train, X_test, y_test, y_pred):
@@ -570,4 +573,48 @@ ndf = [Reg_Models_Evaluation_Metrics(clf, X2_train, y2_train, X2_test, y2_test, 
 clf_score2 = pd.DataFrame(ndf, columns = ["R2 Score", "Adjusted R2 Score", "Cross Validated R2 Score", "RMSE"])
 clf_score2.insert(0, "Model", "Tuned Ridge Regression")
 clf_score2
+
+
+
+######################################
+#### Final Performance Comparison ####
+######################################
+
+### Avocado dataset
+###################
+
+result = pd.concat([clf_score, predictions], ignore_index = True, sort=False)
+result
+
+f, axe = plt.subplots(1, 1, figsize=(18,6))
+result.sort_values(by = ["Cross Validated R2 Score"], ascending=False, inplace=True)
+
+sns.barplot(x = "Cross Validated R2 Score", y = "Model", data=result, ax=axe)
+
+axe.set_xlabel("Cross Validated R2 Score", size=16)
+axe.set_ylabel("Model")
+axe.set_xlim(0, 1.0)
+axe.set(title="Model Perfroamnce for Avocado Dataset")
+
+plt.show()
+
+
+
+### Boston dataset
+###################
+
+result = pd.concat([clf_score2, predictions2], ignore_index = True, sort=False)
+result
+
+f, axe = plt.subplots(1, 1, figsize=(18,6))
+result.sort_values(by = ["Cross Validated R2 Score"], ascending=False, inplace=True)
+
+sns.barplot(x = "Cross Validated R2 Score", y = "Model", data=result, ax=axe)
+
+axe.set_xlabel("Cross Validated R2 Score", size=16)
+axe.set_ylabel("Model")
+axe.set_xlim(0, 1.0)
+axe.set(title="Model Perfroamnce for Boston Dataset")
+
+plt.show()
 
