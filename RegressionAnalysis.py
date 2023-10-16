@@ -436,3 +436,138 @@ rfe_score2
 
 
 
+################################
+#### Final Model Evaluation ####
+################################
+
+
+
+#### Avocado Dataset
+####################
+
+
+predictions = pd.concat([rfe_score, rr_score, rf_score, lm_score], ignore_index=True, sort=False)
+predictions
+
+
+
+#### Boston Dataset
+###################
+
+predictions2 = pd.concat([rfe_score2, rr_score2, rf_score2, lm_score2], ignore_index=True, sort=False)
+predictions2
+
+#### Visualising Model Performance
+##################################
+
+
+### Avocado
+
+f, axe = plt.subplots(1, 1, figsize=(18, 6))
+
+predictions.sort_values(by=["Cross Validated R2 Score"], ascending=False, inplace = True)
+
+sns.barplot(x = "Cross Validated R2 Score", y = "Model", data=predictions, ax=axe)
+axe.set_xlabel("Cross Validated R2 Score", size = 16)
+axe.set_ylabel("Model")
+axe.set_xlim(0,1)
+
+axe.set(title="Model Performance for Avocado Dataset")
+plt.show()
+
+
+### Boston
+
+f, axe = plt.subplots(1, 1, figsize=(18, 6))
+
+predictions2.sort_values(by=["Cross Validated R2 Score"], ascending=False, inplace = True)
+
+sns.barplot(x = "Cross Validated R2 Score", y = "Model", data=predictions2, ax=axe)
+axe.set_xlabel("Cross Validated R2 Score", size = 16)
+axe.set_ylabel("Model")
+axe.set_xlim(0,1)
+
+axe.set(title="Model Performance for Boston Dataset")
+plt.show()
+
+
+
+################################
+#### Hyperparameter Tuning ####
+################################
+
+
+#### Tuning Ridge Regression
+############################
+
+from sklearn.preprocessing import PolynomialFeatures
+
+steps = [
+    ("poly", PolynomialFeatures(degree=2)),
+    ("model", Ridge(alpha=3.8, fit_intercept=True))
+]
+
+ridge_pipe = Pipeline(steps)
+ridge_pipe.fit(X_train, y_train)
+
+#make predictions
+y_pred = ridge_pipe.predict(X_test)
+
+
+from sklearn.model_selection import GridSearchCV
+
+alpha_params = [{"model__alpha": list(range(1, 15))}]
+
+clf = GridSearchCV(ridge_pipe, alpha_params, cv=18)
+
+
+### Regression performance for the Avocado dataset
+
+# fit and tune a model
+clf.fit(X_train, y_train)
+
+#make a prediction on test data
+y_pred = ridge_pipe.predict(X_test)
+
+#the combination of hyperparameters along with values that give the best performance of our estimate specified
+print(clf.best_params_)
+
+ndf = [Reg_Models_Evaluation_Metrics(clf, X_train, y_train, X_test, y_test, y_pred)]
+
+clf_score = pd.DataFrame(ndf, columns = ["R2 Score", "Adjusted R2 Score", "Cross Validated R2 Score", "RMSE"])
+clf_score.insert(0, "Model", "Tuned Ridge Regression")
+clf_score
+
+### Regression performance for the Boston dataset
+
+steps  = [
+    ("poly", PolynomialFeatures(degree=2)),
+    ("model", Ridge(alpha=3.8,  fit_intercept=True))
+]
+
+ridge_pipe = Pipeline(steps)
+print(ridge_pipe)
+ridge_pipe.fit(X2_train, y2_train)
+print(ridge_pipe)
+
+
+# predict test data
+y_pred = ridge_pipe.predict(X2_test)
+print(y_pred)
+
+alpha_params = [{"model__alpha": list(range(1, 15))}]
+
+clf = GridSearchCV(ridge_pipe, alpha_params, cv=10)
+
+clf.fit(X2_train, y2_train)
+
+y_pred = ridge_pipe.predict(X2_test)
+
+print(clf.best_params_)
+
+
+ndf = [Reg_Models_Evaluation_Metrics(clf, X2_train, y2_train, X2_test, y2_test, y_pred)]
+clf_score2 = pd.DataFrame(ndf, columns = ["R2 Score", "Adjusted R2 Score", "Cross Validated R2 Score", "RMSE"])
+clf_score2.insert(0, "Model", "Tuned Ridge Regression")
+clf_score2
+
